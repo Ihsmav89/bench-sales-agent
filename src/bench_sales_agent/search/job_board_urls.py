@@ -30,6 +30,7 @@ class JobBoardURLBuilder:
             "location": location,
             "radius": str(radius),
             "filters.employmentType": "CONTRACT",
+            "filters.postedDate": "THIRTY_DAYS",
         }
         url = "https://www.dice.com/jobs?" + urllib.parse.urlencode(params)
         return JobBoardLink("Dice", url, f"Dice: {title} C2C near {location}")
@@ -41,6 +42,7 @@ class JobBoardURLBuilder:
             "l": location,
             "radius": str(radius),
             "jt": "contract",
+            "fromage": "30",
         }
         url = "https://www.indeed.com/jobs?" + urllib.parse.urlencode(params)
         return JobBoardLink("Indeed", url, f"Indeed: {title} C2C near {location}")
@@ -51,6 +53,7 @@ class JobBoardURLBuilder:
             "keywords": f"{title} c2c corp to corp",
             "location": location or "United States",
             "f_JT": "C",  # Contract
+            "f_TPR": "r2592000",  # Past month (seconds)
         }
         url = "https://www.linkedin.com/jobs/search/?" + urllib.parse.urlencode(params)
         return JobBoardLink("LinkedIn", url, f"LinkedIn: {title} C2C")
@@ -105,6 +108,7 @@ class JobBoardURLBuilder:
             "q": f"{title} c2c corp to corp",
             "l": location or "United States",
             "jt": "contract",
+            "t": "30",
         }
         url = "https://www.simplyhired.com/search?" + urllib.parse.urlencode(params)
         return JobBoardLink("SimplyHired", url, f"SimplyHired: {title} C2C")

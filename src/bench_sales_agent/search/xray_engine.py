@@ -200,6 +200,10 @@ class XRaySearchEngine:
         "hcl", "tek systems", "robert half", "randstad",
     ]
 
+    # Google date filter: restrict results to past month
+    # tbs=qdr:d (day), qdr:w (week), qdr:m (month), qdr:y (year)
+    RECENCY_FILTER = "&tbs=qdr:m"
+
     def __init__(self):
         self._google_base = "https://www.google.com/search?q="
 
@@ -239,7 +243,7 @@ class XRaySearchEngine:
         queries.append(SearchQuery(
             query=q,
             platform=SearchPlatform.LINKEDIN,
-            search_url=self._google_base + self._url_encode(q),
+            search_url=self._search_url(q),
             description=f"LinkedIn Jobs X-ray: {title} contract roles",
             category="job_search",
             priority=1,
@@ -256,7 +260,7 @@ class XRaySearchEngine:
         queries.append(SearchQuery(
             query=q2,
             platform=SearchPlatform.LINKEDIN,
-            search_url=self._google_base + self._url_encode(q2),
+            search_url=self._search_url(q2),
             description=f"LinkedIn People X-ray: Recruiters posting {title} roles",
             category="contact_find",
             priority=2,
@@ -270,7 +274,7 @@ class XRaySearchEngine:
         queries.append(SearchQuery(
             query=q3,
             platform=SearchPlatform.LINKEDIN,
-            search_url=self._google_base + self._url_encode(q3),
+            search_url=self._search_url(q3),
             description=f"LinkedIn Companies X-ray: Vendors hiring {title}",
             category="vendor_hunt",
             priority=3,
@@ -289,7 +293,7 @@ class XRaySearchEngine:
         queries.append(SearchQuery(
             query=q4,
             platform=SearchPlatform.LINKEDIN,
-            search_url=self._google_base + self._url_encode(q4),
+            search_url=self._search_url(q4),
             description=f"LinkedIn Posts X-ray: Urgent {title} requirements",
             category="job_search",
             priority=1,
@@ -312,7 +316,7 @@ class XRaySearchEngine:
         queries.append(SearchQuery(
             query=q,
             platform=SearchPlatform.DICE,
-            search_url=self._google_base + self._url_encode(q),
+            search_url=self._search_url(q),
             description=f"Dice X-ray: {title} contract roles",
             category="job_search",
             priority=1,
@@ -324,7 +328,7 @@ class XRaySearchEngine:
             queries.append(SearchQuery(
                 query=q2,
                 platform=SearchPlatform.DICE,
-                search_url=self._google_base + self._url_encode(q2),
+                search_url=self._search_url(q2),
                 description=f"Dice X-ray: {title} roles accepting {p.visa_status}",
                 category="job_search",
                 priority=2,
@@ -349,7 +353,7 @@ class XRaySearchEngine:
         queries.append(SearchQuery(
             query=q,
             platform=SearchPlatform.INDEED,
-            search_url=self._google_base + self._url_encode(q),
+            search_url=self._search_url(q),
             description=f"Indeed X-ray: {title} contract roles",
             category="job_search",
             priority=1,
@@ -369,7 +373,7 @@ class XRaySearchEngine:
         queries.append(SearchQuery(
             query=q,
             platform=SearchPlatform.MONSTER,
-            search_url=self._google_base + self._url_encode(q),
+            search_url=self._search_url(q),
             description=f"Monster X-ray: {title} contract roles",
             category="job_search",
             priority=2,
@@ -389,7 +393,7 @@ class XRaySearchEngine:
         queries.append(SearchQuery(
             query=q,
             platform=SearchPlatform.CAREERBUILDER,
-            search_url=self._google_base + self._url_encode(q),
+            search_url=self._search_url(q),
             description=f"CareerBuilder X-ray: {title} contract roles",
             category="job_search",
             priority=3,
@@ -410,7 +414,7 @@ class XRaySearchEngine:
         queries.append(SearchQuery(
             query=q,
             platform=SearchPlatform.ZIPRECRUITER,
-            search_url=self._google_base + self._url_encode(q),
+            search_url=self._search_url(q),
             description=f"ZipRecruiter X-ray: {title} contract roles",
             category="job_search",
             priority=2,
@@ -430,7 +434,7 @@ class XRaySearchEngine:
         queries.append(SearchQuery(
             query=q,
             platform=SearchPlatform.TECHFETCH,
-            search_url=self._google_base + self._url_encode(q),
+            search_url=self._search_url(q),
             description=f"TechFetch X-ray: {title} C2C/contract roles",
             category="job_search",
             priority=2,
@@ -457,7 +461,7 @@ class XRaySearchEngine:
         queries.append(SearchQuery(
             query=q,
             platform=SearchPlatform.GOOGLE,
-            search_url=self._google_base + self._url_encode(q),
+            search_url=self._search_url(q),
             description=f"Vendor hunt: Find recruiters with {title} needs",
             category="vendor_hunt",
             priority=1,
@@ -471,7 +475,7 @@ class XRaySearchEngine:
         queries.append(SearchQuery(
             query=q2,
             platform=SearchPlatform.GOOGLE,
-            search_url=self._google_base + self._url_encode(q2),
+            search_url=self._search_url(q2),
             description=f"Find staffing companies specializing in {title}",
             category="vendor_hunt",
             priority=2,
@@ -498,7 +502,7 @@ class XRaySearchEngine:
         queries.append(SearchQuery(
             query=q,
             platform=SearchPlatform.GOOGLE,
-            search_url=self._google_base + self._url_encode(q),
+            search_url=self._search_url(q),
             description=f"Direct client search: {title} on corporate career sites",
             category="job_search",
             priority=1,
@@ -514,7 +518,7 @@ class XRaySearchEngine:
         queries.append(SearchQuery(
             query=q2,
             platform=SearchPlatform.GOOGLE,
-            search_url=self._google_base + self._url_encode(q2),
+            search_url=self._search_url(q2),
             description=f"Government/state contracts: {title}",
             category="job_search",
             priority=3,
@@ -539,7 +543,7 @@ class XRaySearchEngine:
         queries.append(SearchQuery(
             query=q,
             platform=SearchPlatform.CORP_CORP,
-            search_url=self._google_base + self._url_encode(q),
+            search_url=self._search_url(q),
             description=f"C2C specific: {title} corp-to-corp requirements",
             category="job_search",
             priority=1,
@@ -553,7 +557,7 @@ class XRaySearchEngine:
         queries.append(SearchQuery(
             query=q2,
             platform=SearchPlatform.CORP_CORP,
-            search_url=self._google_base + self._url_encode(q2),
+            search_url=self._search_url(q2),
             description=f"C2C job boards: {title}",
             category="job_search",
             priority=2,
@@ -577,7 +581,7 @@ class XRaySearchEngine:
         queries.append(SearchQuery(
             query=q,
             platform=SearchPlatform.GOOGLE,
-            search_url=self._google_base + self._url_encode(q),
+            search_url=self._search_url(q),
             description=f"VMS/MSP programs: {title} contingent roles",
             category="job_search",
             priority=3,
@@ -603,7 +607,7 @@ class XRaySearchEngine:
         queries.append(SearchQuery(
             query=q,
             platform=SearchPlatform.GOOGLE,
-            search_url=self._google_base + self._url_encode(q),
+            search_url=self._search_url(q),
             description=f"Find vendor contacts posting {title} requirements",
             category="contact_find",
             priority=2,
@@ -618,7 +622,7 @@ class XRaySearchEngine:
         queries.append(SearchQuery(
             query=q2,
             platform=SearchPlatform.GOOGLE,
-            search_url=self._google_base + self._url_encode(q2),
+            search_url=self._search_url(q2),
             description=f"Staffing directories: agencies placing {title}",
             category="contact_find",
             priority=3,
@@ -642,7 +646,7 @@ class XRaySearchEngine:
         queries.append(SearchQuery(
             query=q,
             platform=SearchPlatform.GOOGLE,
-            search_url=self._google_base + self._url_encode(q),
+            search_url=self._search_url(q),
             description=f"Find vendor hotlists with {title} requirements",
             category="job_search",
             priority=1,
@@ -658,7 +662,7 @@ class XRaySearchEngine:
         queries.append(SearchQuery(
             query=q2,
             platform=SearchPlatform.GOOGLE,
-            search_url=self._google_base + self._url_encode(q2),
+            search_url=self._search_url(q2),
             description=f"Additional boards: {title} contract roles",
             category="job_search",
             priority=2,
@@ -671,8 +675,7 @@ class XRaySearchEngine:
         title_lower = title.lower().strip()
         return self.ROLE_SYNONYMS.get(title_lower, [title])
 
-    @staticmethod
-    def _url_encode(query: str) -> str:
-        """URL-encode a search query string."""
+    def _search_url(self, query: str) -> str:
+        """Build a full Google search URL with recency filter."""
         import urllib.parse
-        return urllib.parse.quote_plus(query)
+        return self._google_base + urllib.parse.quote_plus(query) + self.RECENCY_FILTER
