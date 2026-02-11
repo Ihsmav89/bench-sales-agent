@@ -1,0 +1,76 @@
+{% if error %}
+<div class="bg-red-900/30 border border-red-700 rounded p-4 text-red-300">{{ error }}</div>
+{% else %}
+<div class="mb-4 flex items-center gap-3">
+    <h3 class="text-lg font-semibold">Results: {{ title_label }}</h3>
+    <span class="text-sm text-gray-400">{{ total_queries }} queries generated</span>
+</div>
+
+{% for cat, cat_queries in categories.items() %}
+<div class="bg-dark-800 rounded-lg border border-dark-600 mb-4 overflow-hidden">
+    <div class="px-4 py-2 bg-dark-700 text-sm font-semibold text-accent">
+        {{ cat.replace('_', ' ').title() }} ({{ cat_queries | length }})
+    </div>
+    <table class="w-full text-sm">
+        <thead class="text-gray-500 text-left text-xs">
+            <tr>
+                <th class="px-3 py-1.5 w-8">#</th>
+                <th class="px-3 py-1.5 w-28">Platform</th>
+                <th class="px-3 py-1.5">Description</th>
+                <th class="px-3 py-1.5 w-16 text-center">Priority</th>
+                <th class="px-3 py-1.5 w-20"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for q in cat_queries %}
+            <tr class="border-t border-dark-700 hover:bg-dark-700/50">
+                <td class="px-3 py-1.5 text-gray-500">{{ loop.index }}</td>
+                <td class="px-3 py-1.5 text-yellow-400">{{ q.platform.value }}</td>
+                <td class="px-3 py-1.5">{{ q.description }}</td>
+                <td class="px-3 py-1.5 text-center">
+                    {% if q.priority == 1 %}
+                    <span class="text-red-400 font-bold">P1</span>
+                    {% elif q.priority == 2 %}
+                    <span class="text-yellow-400">P2</span>
+                    {% else %}
+                    <span class="text-gray-500">P3</span>
+                    {% endif %}
+                </td>
+                <td class="px-3 py-1.5">
+                    <a href="{{ q.search_url }}" target="_blank" class="text-xs text-accent hover:underline">Open</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endfor %}
+
+{% if board_links %}
+<div class="bg-dark-800 rounded-lg border border-dark-600 mb-4 overflow-hidden">
+    <div class="px-4 py-2 bg-dark-700 text-sm font-semibold text-green-400">
+        Direct Job Board Links ({{ board_links | length }})
+    </div>
+    <table class="w-full text-sm">
+        <thead class="text-gray-500 text-left text-xs">
+            <tr>
+                <th class="px-3 py-1.5 w-28">Board</th>
+                <th class="px-3 py-1.5">Description</th>
+                <th class="px-3 py-1.5 w-20"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for link in board_links %}
+            <tr class="border-t border-dark-700 hover:bg-dark-700/50">
+                <td class="px-3 py-1.5 text-yellow-400">{{ link.platform }}</td>
+                <td class="px-3 py-1.5">{{ link.description }}</td>
+                <td class="px-3 py-1.5">
+                    <a href="{{ link.url }}" target="_blank" class="text-xs text-accent hover:underline">Open</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endif %}

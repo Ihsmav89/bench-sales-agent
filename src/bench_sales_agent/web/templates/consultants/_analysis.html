@@ -1,0 +1,5 @@
+{% if error %}
+<div class="text-red-400 text-sm">{{ error }}</div>
+{% else %}
+<div class="prose prose-invert prose-sm max-w-none mt-3 text-gray-300 whitespace-pre-wrap">{{ analysis }}</div>
+{% endif %}

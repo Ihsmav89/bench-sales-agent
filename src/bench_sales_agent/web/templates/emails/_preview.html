@@ -1,0 +1,11 @@
+{% if error %}
+<div class="bg-red-900/30 border border-red-700 rounded p-4 text-red-300">{{ error }}</div>
+{% else %}
+<div class="bg-dark-800 rounded-lg border border-dark-600 overflow-hidden">
+    <div class="px-4 py-2 bg-dark-700 flex items-center justify-between">
+        <span class="font-semibold text-sm">{{ subject }}</span>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('email-body').innerText)" class="text-xs text-accent hover:underline">Copy</button>
+    </div>
+    <pre id="email-body" class="p-4 text-sm text-gray-300 whitespace-pre-wrap font-sans">{{ body }}</pre>
+</div>
+{% endif %}

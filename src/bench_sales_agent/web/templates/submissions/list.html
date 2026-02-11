@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Submissions — Bench Sales Agent{% endblock %}
+{% block content %}
+<h2 class="text-2xl font-bold mb-6">Submissions & Follow-ups</h2>
+
+<div class="mb-4 flex gap-3 items-end">
+    <form method="get" action="/submissions" class="flex gap-3 items-end">
+        <div>
+            <label class="block text-sm text-gray-400 mb-1">Filter by Consultant</label>
+            <select name="consultant_id" onchange="this.form.submit()" class="px-3 py-2 bg-dark-800 border border-dark-600 rounded text-gray-200">
+                <option value="">All Pending Follow-ups</option>
+                {% for c in consultants %}
+                <option value="{{ c.id }}" {% if selected_consultant == c.id %}selected{% endif %}>{{ c.full_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+</div>
+
+{% if submissions %}
+<div class="overflow-x-auto">
+    <table class="w-full text-sm">
+        <thead class="bg-dark-800 text-gray-400 text-left">
+            <tr>
+                <th class="px-3 py-2">ID</th>
+                <th class="px-3 py-2">Consultant</th>
+                <th class="px-3 py-2">Job</th>
+                <th class="px-3 py-2">Vendor</th>
+                <th class="px-3 py-2">Status</th>
+                <th class="px-3 py-2 text-right">Follow-ups</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in submissions %}
+            <tr class="border-b border-dark-700 hover:bg-dark-800">
+                <td class="px-3 py-2 text-gray-500 font-mono text-xs">{{ s.id }}</td>
+                <td class="px-3 py-2">{{ s.consultant_id }}</td>
+                <td class="px-3 py-2">{{ s.job_id }}</td>
+                <td class="px-3 py-2">{{ s.vendor_name }}</td>
+                <td class="px-3 py-2">
+                    {% if s.status.value == 'Interview' or s.status.value == 'Selected' %}
+                    <span class="text-green-400">{{ s.status.value }}</span>
+                    {% elif s.status.value == 'Submitted' %}
+                    <span class="text-yellow-400">{{ s.status.value }}</span>
+                    {% else %}
+                    {{ s.status.value }}
+                    {% endif %}
+                </td>
+                <td class="px-3 py-2 text-right font-mono">{{ s.followup_count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="bg-dark-800 rounded-lg p-8 text-center border border-dark-600">
+    <p class="text-gray-400">No {% if selected_consultant %}submissions for this consultant{% else %}pending follow-ups{% endif %}.</p>
+</div>
+{% endif %}
+{% endblock %}

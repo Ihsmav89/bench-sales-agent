@@ -1,0 +1,13 @@
+services:
+  bench-agent:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - bench-data:/app/data
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - BENCH_DB_PATH=/app/data/bench_sales.json
+
+volumes:
+  bench-data:

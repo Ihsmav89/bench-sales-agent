@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}AI Chat — Bench Sales Agent{% endblock %}
+{% block content %}
+<h2 class="text-2xl font-bold mb-2">AI Bench Sales Chat</h2>
+<p class="text-sm text-gray-400 mb-6">Ask anything about bench sales, market rates, strategies, vendor management, etc.</p>
+
+<div id="chat-messages" class="space-y-4 mb-6 min-h-[200px]">
+    <div class="bg-dark-800 rounded-lg p-4 border border-dark-600 text-gray-400 text-sm">
+        Agent ready. Ask me about market rates, placement strategies, visa considerations, rate negotiation, or anything bench sales related.
+    </div>
+</div>
+
+<form hx-post="/chat/send" hx-target="#chat-messages" hx-swap="beforeend" hx-indicator="#chat-spinner"
+      hx-on::after-request="this.reset(); document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;">
+    <div class="flex gap-3">
+        <input type="text" name="message" required placeholder="Ask the bench sales agent..." autofocus
+            class="flex-1 px-4 py-2 bg-dark-800 border border-dark-600 rounded text-gray-200 focus:border-accent focus:outline-none">
+        <button type="submit" class="px-6 py-2 bg-accent text-dark-900 rounded font-semibold hover:bg-accent-light">Send</button>
+        <span id="chat-spinner" class="htmx-indicator flex items-center text-sm text-gray-400">
+            <svg class="spinner w-4 h-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="20"/></svg>
+            Thinking...
+        </span>
+    </div>
+</form>
+{% endblock %}

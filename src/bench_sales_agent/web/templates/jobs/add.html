@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Add Job — Bench Sales Agent{% endblock %}
+{% block content %}
+<h2 class="text-2xl font-bold mb-6">Add Job Requirement</h2>
+
+<form method="post" action="/jobs" class="max-w-2xl space-y-4">
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm text-gray-400 mb-1">Job Title *</label>
+            <input type="text" name="title" required class="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-gray-200 focus:border-accent focus:outline-none">
+        </div>
+        <div>
+            <label class="block text-sm text-gray-400 mb-1">Vendor Name *</label>
+            <input type="text" name="vendor_name" required class="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-gray-200 focus:border-accent focus:outline-none">
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm text-gray-400 mb-1">Client Name</label>
+            <input type="text" name="client_name" class="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-gray-200 focus:border-accent focus:outline-none">
+        </div>
+        <div>
+            <label class="block text-sm text-gray-400 mb-1">Vendor Contact Email</label>
+            <input type="email" name="vendor_contact_email" class="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-gray-200 focus:border-accent focus:outline-none">
+        </div>
+    </div>
+
+    <div>
+        <label class="block text-sm text-gray-400 mb-1">Required Skills * (comma-separated)</label>
+        <input type="text" name="required_skills" required placeholder="Java, Spring Boot, AWS" class="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-gray-200 focus:border-accent focus:outline-none">
+    </div>
+
+    <div>
+        <label class="block text-sm text-gray-400 mb-1">Description</label>
+        <textarea name="description" rows="3" class="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-gray-200 focus:border-accent focus:outline-none"></textarea>
+    </div>
+
+    <div class="grid grid-cols-4 gap-4">
+        <div>
+            <label class="block text-sm text-gray-400 mb-1">Location</label>
+            <input type="text" name="location" value="Remote" class="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-gray-200 focus:border-accent focus:outline-none">
+        </div>
+        <div>
+            <label class="block text-sm text-gray-400 mb-1">Work Mode</label>
+            <select name="remote_option" class="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-gray-200">
+                <option value="Remote" selected>Remote</option>
+                <option value="Hybrid">Hybrid</option>
+                <option value="Onsite">Onsite</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm text-gray-400 mb-1">Duration (months)</label>
+            <input type="number" name="duration_months" value="12" class="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-gray-200 focus:border-accent focus:outline-none">
+        </div>
+        <div>
+            <label class="block text-sm text-gray-400 mb-1">Bill Rate ($/hr)</label>
+            <input type="number" name="bill_rate" step="1" value="0" class="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-gray-200 focus:border-accent focus:outline-none">
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm text-gray-400 mb-1">Employment Type</label>
+            <select name="employment_type" class="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-gray-200">
+                <option value="C2C" selected>C2C</option>
+                <option value="C2C/W2">C2C/W2</option>
+                <option value="W2">W2</option>
+                <option value="1099">1099</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm text-gray-400 mb-1">Source</label>
+            <select name="source_platform" class="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-gray-200">
+                <option value="email">Email</option>
+                <option value="dice">Dice</option>
+                <option value="indeed">Indeed</option>
+                <option value="linkedin">LinkedIn</option>
+                <option value="monster">Monster</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="pt-4 flex gap-3">
+        <button type="submit" class="px-6 py-2 bg-accent text-dark-900 rounded font-semibold hover:bg-accent-light">Add Job</button>
+        <a href="/jobs" class="px-6 py-2 bg-dark-700 rounded hover:bg-dark-600">Cancel</a>
+    </div>
+</form>
+{% endblock %}

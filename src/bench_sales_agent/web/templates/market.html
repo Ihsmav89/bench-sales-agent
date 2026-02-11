@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Market Rates — Bench Sales Agent{% endblock %}
+{% block content %}
+<h2 class="text-2xl font-bold mb-6">Market Rate Analysis</h2>
+
+<div class="bg-dark-800 rounded-lg p-5 border border-dark-600 mb-6">
+    <form hx-post="/market/analyze" hx-target="#market-result" hx-indicator="#market-spinner" class="space-y-4">
+        <div class="grid grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Job Title *</label>
+                <input type="text" name="job_title" required placeholder="e.g., Java Developer" class="w-full px-3 py-2 bg-dark-900 border border-dark-600 rounded text-gray-200 focus:border-accent focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Location</label>
+                <input type="text" name="location" value="Remote / US" class="w-full px-3 py-2 bg-dark-900 border border-dark-600 rounded text-gray-200 focus:border-accent focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Key Skills * (comma-separated)</label>
+                <input type="text" name="skills" required placeholder="Java, Spring Boot, AWS" class="w-full px-3 py-2 bg-dark-900 border border-dark-600 rounded text-gray-200 focus:border-accent focus:outline-none">
+            </div>
+        </div>
+        <button type="submit" class="px-6 py-2 bg-accent text-dark-900 rounded font-semibold hover:bg-accent-light">Analyze Market Rates</button>
+        <span id="market-spinner" class="htmx-indicator text-sm text-gray-400 ml-3">
+            <svg class="inline spinner w-4 h-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="20"/></svg>
+            Analyzing...
+        </span>
+    </form>
+</div>
+
+<!-- Built-in rate benchmarks -->
+<div class="bg-dark-800 rounded-lg p-5 border border-dark-600 mb-6">
+    <h3 class="text-lg font-semibold mb-3">C2C Rate Benchmarks (Mid-to-Senior)</h3>
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+        <div class="flex justify-between px-3 py-1.5 bg-dark-700 rounded"><span>Java/Python/Full Stack</span><span class="text-accent">$65-95/hr</span></div>
+        <div class="flex justify-between px-3 py-1.5 bg-dark-700 rounded"><span>Cloud/DevOps</span><span class="text-accent">$70-100/hr</span></div>
+        <div class="flex justify-between px-3 py-1.5 bg-dark-700 rounded"><span>Data Engineering</span><span class="text-accent">$75-110/hr</span></div>
+        <div class="flex justify-between px-3 py-1.5 bg-dark-700 rounded"><span>Salesforce</span><span class="text-accent">$70-100/hr</span></div>
+        <div class="flex justify-between px-3 py-1.5 bg-dark-700 rounded"><span>SAP</span><span class="text-accent">$80-120/hr</span></div>
+        <div class="flex justify-between px-3 py-1.5 bg-dark-700 rounded"><span>Cybersecurity</span><span class="text-accent">$80-115/hr</span></div>
+        <div class="flex justify-between px-3 py-1.5 bg-dark-700 rounded"><span>.NET/C#</span><span class="text-accent">$60-90/hr</span></div>
+        <div class="flex justify-between px-3 py-1.5 bg-dark-700 rounded"><span>QA/SDET</span><span class="text-accent">$50-75/hr</span></div>
+        <div class="flex justify-between px-3 py-1.5 bg-dark-700 rounded"><span>Business Analyst</span><span class="text-accent">$55-80/hr</span></div>
+        <div class="flex justify-between px-3 py-1.5 bg-dark-700 rounded"><span>Scrum Master/PM</span><span class="text-accent">$60-90/hr</span></div>
+        <div class="flex justify-between px-3 py-1.5 bg-dark-700 rounded"><span>React/Angular</span><span class="text-accent">$60-85/hr</span></div>
+        <div class="flex justify-between px-3 py-1.5 bg-dark-700 rounded"><span>Database/DBA</span><span class="text-accent">$55-85/hr</span></div>
+    </div>
+    <p class="text-xs text-gray-500 mt-3">Remote roles 5-10% lower. NYC/SF/Seattle +15-25%. Government -10-15%.</p>
+</div>
+
+<div id="market-result"></div>
+{% endblock %}

@@ -1,0 +1,43 @@
+[agent]
+name = "BenchSalesAgent"
+expertise_years = 15
+specialization = "IT Staffing / Bench Sales"
+target_market = "United States"
+
+[search]
+# Maximum results per search query
+max_results_per_query = 50
+# Default search radius in miles
+default_radius_miles = 50
+# Rate limit delay between searches (seconds)
+rate_limit_delay = 2.0
+
+[search.job_boards]
+enabled = [
+    "dice",
+    "indeed",
+    "monster",
+    "careerbuilder",
+    "ziprecruiter",
+    "linkedin",
+    "glassdoor",
+    "techfetch",
+    "corp-corp",
+]
+
+[search.xray]
+# Google X-ray search operators
+linkedin_site = "site:linkedin.com/jobs OR site:linkedin.com/in"
+dice_site = "site:dice.com/jobs"
+indeed_site = "site:indeed.com/viewjob"
+monster_site = "site:monster.com/job-openings"
+careerbuilder_site = "site:careerbuilder.com/job"
+ziprecruiter_site = "site:ziprecruiter.com/jobs"
+
+[database]
+path = "data/bench_sales.db"
+
+[templates]
+submission_email = "templates/submission_email.j2"
+vendor_outreach = "templates/vendor_outreach.j2"
+hotlist_email = "templates/hotlist.j2"
