@@ -29,7 +29,8 @@
       "Bash(git push:*)",
       "Bash(gh api:*)",
       "Bash(pytest:*)",
-      "Bash(bench-agent-web)"
+      "Bash(bench-agent-web)",
+      "mcp__sequential-thinking__sequentialthinking"
     ]
   }
 }

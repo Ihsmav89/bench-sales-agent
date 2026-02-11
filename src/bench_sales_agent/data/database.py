@@ -38,10 +38,10 @@ class Database:
             )
         Path(db_path).parent.mkdir(parents=True, exist_ok=True)
         self._db = TinyDB(db_path, indent=2)
-        self._consultants = self._db.table("consultants")
-        self._jobs = self._db.table("jobs")
-        self._vendors = self._db.table("vendors")
-        self._submissions = self._db.table("submissions")
+        self._consultants = self._db.table("consultants", cache_size=0)
+        self._jobs = self._db.table("jobs", cache_size=0)
+        self._vendors = self._db.table("vendors", cache_size=0)
+        self._submissions = self._db.table("submissions", cache_size=0)
 
     # ── Consultants ──────────────────────────────────────────────────────
 
