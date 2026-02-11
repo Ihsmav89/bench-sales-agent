@@ -7,7 +7,9 @@ Rich-powered terminal interface with menus, tables, and formatted output.
 from __future__ import annotations
 
 import sys
+from collections.abc import Callable
 from datetime import date
+from typing import Any
 
 import click
 from rich.console import Console
@@ -29,6 +31,59 @@ from .templates.emails import EmailTemplates
 console = Console()
 
 
+# ── Shared Helpers ──────────────────────────────────────────────────────
+
+
+def parse_csv(raw: str) -> list[str]:
+    """Split comma-separated string into stripped, non-empty items."""
+    return [s.strip() for s in raw.split(",") if s.strip()]
+
+
+def run_menu(
+    title: str, items: list[tuple[str, Callable[[], None]]], *, exit_label: str = "Back",
+) -> None:
+    """Run an interactive menu loop. Items are (label, handler) tuples, numbered 1..N."""
+    choices = [str(i) for i in range(len(items) + 1)]
+    while True:
+        console.print(f"\n[bold]{title}[/bold]")
+        for i, (label, _) in enumerate(items, 1):
+            console.print(f"  [cyan]{i}[/cyan]  {label}")
+        console.print(f"  [cyan]0[/cyan]  {exit_label}")
+
+        choice = Prompt.ask("Select", choices=choices)
+        if choice == "0":
+            break
+        items[int(choice) - 1][1]()
+
+
+def prompt_select(
+    items: list,
+    list_fn: Callable[[], None],
+    get_fn: Callable[[str], Any | None],
+    *,
+    label: str = "ID",
+    empty_msg: str = "No items found.",
+) -> Any | None:
+    """List entities, prompt for ID, fetch and return. Returns None on empty list or not found."""
+    if not items:
+        console.print(f"[yellow]{empty_msg}[/yellow]")
+        return None
+    list_fn()
+    eid = Prompt.ask(label)
+    entity = get_fn(eid)
+    if entity is None:
+        console.print("[red]Not found.[/red]")
+    return entity
+
+
+def show_email_panel(email: dict, title: str) -> None:
+    """Display a generated email in a Rich panel."""
+    console.print(Panel(
+        f"[bold]Subject:[/bold] {email['subject']}\n\n{email['body']}",
+        title=title, border_style="green",
+    ))
+
+
 def banner():
     console.print(Panel.fit(
         "[bold cyan]BENCH SALES AGENT[/bold cyan]\n"
@@ -36,21 +91,6 @@ def banner():
         "[dim]15 Years of Bench Sales Expertise Built In[/dim]",
         border_style="cyan",
     ))
-
-
-def show_main_menu():
-    console.print("\n[bold]Main Menu[/bold]")
-    console.print("  [cyan]1[/cyan]  Manage Bench Consultants")
-    console.print("  [cyan]2[/cyan]  Search for Contract Roles")
-    console.print("  [cyan]3[/cyan]  Manage Job Requirements")
-    console.print("  [cyan]4[/cyan]  Manage Vendors")
-    console.print("  [cyan]5[/cyan]  Submissions & Follow-ups")
-    console.print("  [cyan]6[/cyan]  Generate Emails & Hotlists")
-    console.print("  [cyan]7[/cyan]  AI Chat (Ask the Agent)")
-    console.print("  [cyan]8[/cyan]  Market Rate Analysis")
-    console.print("  [cyan]9[/cyan]  Dashboard / Stats")
-    console.print("  [cyan]0[/cyan]  Exit")
-    return Prompt.ask("\nSelect", choices=["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"])
 
 
 # ── Consultant Management ────────────────────────────────────────────────
@@ -65,11 +105,10 @@ def add_consultant_interactive(db: Database):
     location = Prompt.ask("Current Location (City, ST)", default="")
     job_title = Prompt.ask("Job Title (e.g., Java Developer)")
 
-    skills_raw = Prompt.ask("Primary Skills (comma-separated)")
-    primary_skills = [s.strip() for s in skills_raw.split(",") if s.strip()]
-
-    secondary_raw = Prompt.ask("Secondary Skills (comma-separated, optional)", default="")
-    secondary_skills = [s.strip() for s in secondary_raw.split(",") if s.strip()]
+    primary_skills = parse_csv(Prompt.ask("Primary Skills (comma-separated)"))
+    secondary_skills = parse_csv(
+        Prompt.ask("Secondary Skills (comma-separated, optional)", default=""),
+    )
 
     exp = FloatPrompt.ask("Total Experience (years)")
     us_exp = FloatPrompt.ask("US Experience (years)", default=0)
@@ -142,96 +181,51 @@ def list_consultants(db: Database):
     console.print(table)
 
 
-def consultant_menu(db: Database, agent: BenchSalesAgent):
-    while True:
-        console.print("\n[bold]Consultant Management[/bold]")
-        console.print("  [cyan]1[/cyan]  Add Consultant")
-        console.print("  [cyan]2[/cyan]  List All Consultants")
-        console.print("  [cyan]3[/cyan]  AI Profile Analysis")
-        console.print("  [cyan]0[/cyan]  Back")
-        choice = Prompt.ask("Select", choices=["0", "1", "2", "3"])
+def _ai_profile_analysis(db: Database, agent: BenchSalesAgent):
+    c = prompt_select(
+        db.list_consultants(), lambda: list_consultants(db),
+        db.get_consultant, label="Enter Consultant ID to analyze",
+        empty_msg="No consultants. Add one first.",
+    )
+    if not c:
+        return
+    with console.status("AI analyzing profile..."):
+        analysis = agent.analyze_consultant(c)
+    console.print(Panel(Markdown(analysis), title="Profile Analysis", border_style="green"))
 
-        if choice == "0":
-            break
-        elif choice == "1":
-            add_consultant_interactive(db)
-        elif choice == "2":
-            list_consultants(db)
-        elif choice == "3":
-            consultants = db.list_consultants()
-            if not consultants:
-                console.print("[yellow]No consultants. Add one first.[/yellow]")
-                continue
-            list_consultants(db)
-            cid = Prompt.ask("Enter Consultant ID to analyze")
-            c = db.get_consultant(cid)
-            if c:
-                with console.status("AI analyzing profile..."):
-                    analysis = agent.analyze_consultant(c)
-                console.print(Panel(
-                    Markdown(analysis),
-                    title="Profile Analysis",
-                    border_style="green",
-                ))
-            else:
-                console.print("[red]Consultant not found.[/red]")
+
+def consultant_menu(db: Database, agent: BenchSalesAgent):
+    run_menu("Consultant Management", [
+        ("Add Consultant", lambda: add_consultant_interactive(db)),
+        ("List All Consultants", lambda: list_consultants(db)),
+        ("AI Profile Analysis", lambda: _ai_profile_analysis(db, agent)),
+    ])
 
 
 # ── Search for Roles ─────────────────────────────────────────────────────
 
 
-def search_menu(db: Database, agent: BenchSalesAgent):
-    while True:
-        console.print("\n[bold]Search for Contract Roles[/bold]")
-        console.print("  [cyan]1[/cyan]  Search by Consultant Profile")
-        console.print("  [cyan]2[/cyan]  Custom Search (Title + Skills + Location)")
-        console.print("  [cyan]3[/cyan]  Generate X-Ray Queries Only")
-        console.print("  [cyan]4[/cyan]  Job Board Direct Links")
-        console.print("  [cyan]0[/cyan]  Back")
-        choice = Prompt.ask("Select", choices=["0", "1", "2", "3", "4"])
-
-        if choice == "0":
-            break
-        elif choice == "1":
-            _search_by_consultant(db, agent)
-        elif choice == "2":
-            _custom_search(agent)
-        elif choice == "3":
-            _xray_queries_only()
-        elif choice == "4":
-            _job_board_links()
-
-
 def _search_by_consultant(db: Database, agent: BenchSalesAgent):
-    consultants = db.list_consultants()
-    if not consultants:
-        console.print("[yellow]No consultants. Add one first.[/yellow]")
-        return
-
-    list_consultants(db)
-    cid = Prompt.ask("Enter Consultant ID")
-    c = db.get_consultant(cid)
+    c = prompt_select(
+        db.list_consultants(), lambda: list_consultants(db),
+        db.get_consultant, label="Enter Consultant ID",
+        empty_msg="No consultants. Add one first.",
+    )
     if not c:
-        console.print("[red]Consultant not found.[/red]")
         return
 
     with console.status("Generating comprehensive search strategy..."):
         strategy = agent.generate_search_strategy(c)
 
-    # Display X-ray queries grouped by category
     queries = strategy["xray_queries"]
     _display_queries(queries, f"X-Ray Search Queries for {c.full_name}")
 
-    # Display hotlist queries
     hotlist_queries = strategy["hotlist_queries"]
     if hotlist_queries:
         _display_queries(hotlist_queries, "Hotlist/Requirement List Queries")
 
-    # Display board links
-    board_links = strategy["board_links"]
-    _display_board_links(board_links)
+    _display_board_links(strategy["board_links"])
 
-    # Display synonyms
     synonyms = strategy["role_synonyms"]
     if len(synonyms) > 1:
         console.print(f"\n[bold]Also search for:[/bold] {', '.join(synonyms[1:])}")
@@ -239,8 +233,7 @@ def _search_by_consultant(db: Database, agent: BenchSalesAgent):
 
 def _custom_search(agent: BenchSalesAgent):
     title = Prompt.ask("Job Title")
-    skills_raw = Prompt.ask("Skills (comma-separated)")
-    skills = [s.strip() for s in skills_raw.split(",") if s.strip()]
+    skills = parse_csv(Prompt.ask("Skills (comma-separated)"))
     location = Prompt.ask("Location (City, ST)", default="")
 
     params = ConsultantSearchParams(
@@ -260,8 +253,7 @@ def _custom_search(agent: BenchSalesAgent):
 
 def _xray_queries_only():
     title = Prompt.ask("Job Title")
-    skills_raw = Prompt.ask("Top Skills (comma-separated)")
-    skills = [s.strip() for s in skills_raw.split(",") if s.strip()]
+    skills = parse_csv(Prompt.ask("Top Skills (comma-separated)"))
     location = Prompt.ask("Location (optional)", default="")
 
     params = ConsultantSearchParams(
@@ -285,7 +277,6 @@ def _job_board_links():
 
 
 def _display_queries(queries, title):
-    # Group by category
     categories = {}
     for q in queries:
         cat = q.category or "general"
@@ -298,7 +289,6 @@ def _display_queries(queries, title):
         table.add_column("Description")
         table.add_column("Priority", justify="center", width=8)
 
-        # Sort by priority
         cat_queries.sort(key=lambda x: x.priority)
         for i, q in enumerate(cat_queries, 1):
             prio_style = "bold red" if q.priority == 1 else "yellow" if q.priority == 2 else "dim"
@@ -311,7 +301,6 @@ def _display_queries(queries, title):
 
         console.print(table)
 
-    # Ask if user wants to see actual queries
     if Confirm.ask("\nShow raw search queries?", default=False):
         for i, q in enumerate(queries, 1):
             console.print(f"\n[cyan]#{i}[/cyan] [{q.platform.value}] {q.description}")
@@ -331,26 +320,16 @@ def _display_board_links(links):
     console.print(table)
 
 
+def search_menu(db: Database, agent: BenchSalesAgent):
+    run_menu("Search for Contract Roles", [
+        ("Search by Consultant Profile", lambda: _search_by_consultant(db, agent)),
+        ("Custom Search (Title + Skills + Location)", lambda: _custom_search(agent)),
+        ("Generate X-Ray Queries Only", _xray_queries_only),
+        ("Job Board Direct Links", _job_board_links),
+    ])
+
+
 # ── Job Requirements ─────────────────────────────────────────────────────
-
-
-def job_menu(db: Database):
-    while True:
-        console.print("\n[bold]Job Requirements[/bold]")
-        console.print("  [cyan]1[/cyan]  Add Job Requirement")
-        console.print("  [cyan]2[/cyan]  List Active Jobs")
-        console.print("  [cyan]3[/cyan]  Match Consultant to Jobs")
-        console.print("  [cyan]0[/cyan]  Back")
-        choice = Prompt.ask("Select", choices=["0", "1", "2", "3"])
-
-        if choice == "0":
-            break
-        elif choice == "1":
-            _add_job_interactive(db)
-        elif choice == "2":
-            _list_jobs(db)
-        elif choice == "3":
-            _match_consultant_to_jobs(db)
 
 
 def _add_job_interactive(db: Database):
@@ -362,8 +341,7 @@ def _add_job_interactive(db: Database):
     vendor_email = Prompt.ask("Vendor Contact Email", default="")
     description = Prompt.ask("Brief Description", default="")
 
-    skills_raw = Prompt.ask("Required Skills (comma-separated)")
-    required_skills = [s.strip() for s in skills_raw.split(",") if s.strip()]
+    required_skills = parse_csv(Prompt.ask("Required Skills (comma-separated)"))
 
     location = Prompt.ask("Location", default="Remote")
     remote = Prompt.ask("Work Mode", choices=["Remote", "Hybrid", "Onsite"], default="Remote")
@@ -422,16 +400,12 @@ def _list_jobs(db: Database):
 
 
 def _match_consultant_to_jobs(db: Database):
-    consultants = db.list_consultants()
-    if not consultants:
-        console.print("[yellow]No consultants.[/yellow]")
-        return
-
-    list_consultants(db)
-    cid = Prompt.ask("Consultant ID to match")
-    c = db.get_consultant(cid)
+    c = prompt_select(
+        db.list_consultants(), lambda: list_consultants(db),
+        db.get_consultant, label="Consultant ID to match",
+        empty_msg="No consultants.",
+    )
     if not c:
-        console.print("[red]Not found.[/red]")
         return
 
     jobs = db.list_jobs()
@@ -439,7 +413,6 @@ def _match_consultant_to_jobs(db: Database):
         console.print("[yellow]No jobs to match against.[/yellow]")
         return
 
-    # Calculate match scores
     matches = []
     for j in jobs:
         score = j.match_score(c.primary_skills + c.secondary_skills)
@@ -466,23 +439,15 @@ def _match_consultant_to_jobs(db: Database):
     console.print(table)
 
 
+def job_menu(db: Database):
+    run_menu("Job Requirements", [
+        ("Add Job Requirement", lambda: _add_job_interactive(db)),
+        ("List Active Jobs", lambda: _list_jobs(db)),
+        ("Match Consultant to Jobs", lambda: _match_consultant_to_jobs(db)),
+    ])
+
+
 # ── Vendor Management ────────────────────────────────────────────────────
-
-
-def vendor_menu(db: Database):
-    while True:
-        console.print("\n[bold]Vendor Management[/bold]")
-        console.print("  [cyan]1[/cyan]  Add Vendor")
-        console.print("  [cyan]2[/cyan]  List Vendors")
-        console.print("  [cyan]0[/cyan]  Back")
-        choice = Prompt.ask("Select", choices=["0", "1", "2"])
-
-        if choice == "0":
-            break
-        elif choice == "1":
-            _add_vendor_interactive(db)
-        elif choice == "2":
-            _list_vendors(db)
 
 
 def _add_vendor_interactive(db: Database):
@@ -537,23 +502,14 @@ def _list_vendors(db: Database):
     console.print(table)
 
 
+def vendor_menu(db: Database):
+    run_menu("Vendor Management", [
+        ("Add Vendor", lambda: _add_vendor_interactive(db)),
+        ("List Vendors", lambda: _list_vendors(db)),
+    ])
+
+
 # ── Submissions ──────────────────────────────────────────────────────────
-
-
-def submission_menu(db: Database):
-    while True:
-        console.print("\n[bold]Submissions & Follow-ups[/bold]")
-        console.print("  [cyan]1[/cyan]  View Pending Follow-ups")
-        console.print("  [cyan]2[/cyan]  View Submissions by Consultant")
-        console.print("  [cyan]0[/cyan]  Back")
-        choice = Prompt.ask("Select", choices=["0", "1", "2"])
-
-        if choice == "0":
-            break
-        elif choice == "1":
-            _pending_followups(db)
-        elif choice == "2":
-            _submissions_by_consultant(db)
 
 
 def _pending_followups(db: Database):
@@ -610,29 +566,14 @@ def _submissions_by_consultant(db: Database):
     console.print(table)
 
 
+def submission_menu(db: Database):
+    run_menu("Submissions & Follow-ups", [
+        ("View Pending Follow-ups", lambda: _pending_followups(db)),
+        ("View Submissions by Consultant", lambda: _submissions_by_consultant(db)),
+    ])
+
+
 # ── Email Generation ─────────────────────────────────────────────────────
-
-
-def email_menu(db: Database, agent: BenchSalesAgent):
-    while True:
-        console.print("\n[bold]Email & Hotlist Generation[/bold]")
-        console.print("  [cyan]1[/cyan]  Generate Hotlist Email")
-        console.print("  [cyan]2[/cyan]  Generate Submission Email")
-        console.print("  [cyan]3[/cyan]  AI-Crafted Submission Email")
-        console.print("  [cyan]4[/cyan]  Vendor Introduction Email")
-        console.print("  [cyan]0[/cyan]  Back")
-        choice = Prompt.ask("Select", choices=["0", "1", "2", "3", "4"])
-
-        if choice == "0":
-            break
-        elif choice == "1":
-            _generate_hotlist(db)
-        elif choice == "2":
-            _generate_submission_email(db)
-        elif choice == "3":
-            _ai_submission_email(db, agent)
-        elif choice == "4":
-            _vendor_intro_email()
 
 
 def _generate_hotlist(db: Database):
@@ -642,43 +583,45 @@ def _generate_hotlist(db: Database):
         return
 
     email = EmailTemplates.hotlist_email(consultants)
-    console.print(Panel(f"[bold]Subject:[/bold] {email['subject']}\n\n{email['body']}",
-                        title="Hotlist Email", border_style="green"))
+    show_email_panel(email, "Hotlist Email")
 
 
 def _generate_submission_email(db: Database):
-    list_consultants(db)
-    cid = Prompt.ask("Consultant ID")
-    c = db.get_consultant(cid)
+    c = prompt_select(
+        db.list_consultants(), lambda: list_consultants(db),
+        db.get_consultant, label="Consultant ID",
+        empty_msg="No consultants.",
+    )
     if not c:
-        console.print("[red]Not found.[/red]")
         return
 
-    _list_jobs(db)
-    jid = Prompt.ask("Job ID")
-    j = db.get_job(jid)
+    j = prompt_select(
+        db.list_jobs(), lambda: _list_jobs(db),
+        db.get_job, label="Job ID",
+        empty_msg="No active jobs.",
+    )
     if not j:
-        console.print("[red]Not found.[/red]")
         return
 
     email = EmailTemplates.submission_email(c, j)
-    console.print(Panel(f"[bold]Subject:[/bold] {email['subject']}\n\n{email['body']}",
-                        title="Submission Email", border_style="green"))
+    show_email_panel(email, "Submission Email")
 
 
 def _ai_submission_email(db: Database, agent: BenchSalesAgent):
-    list_consultants(db)
-    cid = Prompt.ask("Consultant ID")
-    c = db.get_consultant(cid)
+    c = prompt_select(
+        db.list_consultants(), lambda: list_consultants(db),
+        db.get_consultant, label="Consultant ID",
+        empty_msg="No consultants.",
+    )
     if not c:
-        console.print("[red]Not found.[/red]")
         return
 
-    _list_jobs(db)
-    jid = Prompt.ask("Job ID")
-    j = db.get_job(jid)
+    j = prompt_select(
+        db.list_jobs(), lambda: _list_jobs(db),
+        db.get_job, label="Job ID",
+        empty_msg="No active jobs.",
+    )
     if not j:
-        console.print("[red]Not found.[/red]")
         return
 
     with console.status("AI crafting submission email..."):
@@ -687,11 +630,18 @@ def _ai_submission_email(db: Database, agent: BenchSalesAgent):
 
 
 def _vendor_intro_email():
-    skills_raw = Prompt.ask("Your specializations (comma-separated)")
-    skills = [s.strip() for s in skills_raw.split(",") if s.strip()]
+    skills = parse_csv(Prompt.ask("Your specializations (comma-separated)"))
     email = EmailTemplates.vendor_introduction_email(skills)
-    console.print(Panel(f"[bold]Subject:[/bold] {email['subject']}\n\n{email['body']}",
-                        title="Vendor Introduction", border_style="green"))
+    show_email_panel(email, "Vendor Introduction")
+
+
+def email_menu(db: Database, agent: BenchSalesAgent):
+    run_menu("Email & Hotlist Generation", [
+        ("Generate Hotlist Email", lambda: _generate_hotlist(db)),
+        ("Generate Submission Email", lambda: _generate_submission_email(db)),
+        ("AI-Crafted Submission Email", lambda: _ai_submission_email(db, agent)),
+        ("Vendor Introduction Email", _vendor_intro_email),
+    ])
 
 
 # ── AI Chat ──────────────────────────────────────────────────────────────
@@ -702,7 +652,6 @@ def ai_chat(agent: BenchSalesAgent, db: Database):
     console.print("[dim]Ask anything about bench sales, market rates, strategies, etc.[/dim]")
     console.print("[dim]Type 'exit' to go back.[/dim]\n")
 
-    # Give AI context about current data
     stats = db.get_stats()
     context = {"database_stats": stats}
 
@@ -725,8 +674,7 @@ def market_analysis(agent: BenchSalesAgent):
     console.print("\n[bold]Market Rate Analysis[/bold]\n")
     title = Prompt.ask("Job Title")
     location = Prompt.ask("Location", default="Remote / US")
-    skills_raw = Prompt.ask("Key Skills (comma-separated)")
-    skills = [s.strip() for s in skills_raw.split(",") if s.strip()]
+    skills = parse_csv(Prompt.ask("Key Skills (comma-separated)"))
 
     with console.status("Analyzing market rates..."):
         analysis = agent.market_rate_analysis(title, location, skills)
@@ -772,31 +720,31 @@ def main(db_path: str | None):
             "smart emails) are limited. Search queries and templates work without it.[/yellow]\n"
         )
 
+    menu_items = [
+        ("Manage Bench Consultants", lambda: consultant_menu(db, agent)),
+        ("Search for Contract Roles", lambda: search_menu(db, agent)),
+        ("Manage Job Requirements", lambda: job_menu(db)),
+        ("Manage Vendors", lambda: vendor_menu(db)),
+        ("Submissions & Follow-ups", lambda: submission_menu(db)),
+        ("Generate Emails & Hotlists", lambda: email_menu(db, agent)),
+        ("AI Chat (Ask the Agent)", lambda: ai_chat(agent, db)),
+        ("Market Rate Analysis", lambda: market_analysis(agent)),
+        ("Dashboard / Stats", lambda: dashboard(db)),
+    ]
+    choices = [str(i) for i in range(len(menu_items) + 1)]
+
     while True:
         try:
-            choice = show_main_menu()
+            console.print("\n[bold]Main Menu[/bold]")
+            for i, (label, _) in enumerate(menu_items, 1):
+                console.print(f"  [cyan]{i}[/cyan]  {label}")
+            console.print("  [cyan]0[/cyan]  Exit")
 
+            choice = Prompt.ask("\nSelect", choices=choices)
             if choice == "0":
                 console.print("[bold]Goodbye![/bold]")
                 sys.exit(0)
-            elif choice == "1":
-                consultant_menu(db, agent)
-            elif choice == "2":
-                search_menu(db, agent)
-            elif choice == "3":
-                job_menu(db)
-            elif choice == "4":
-                vendor_menu(db)
-            elif choice == "5":
-                submission_menu(db)
-            elif choice == "6":
-                email_menu(db, agent)
-            elif choice == "7":
-                ai_chat(agent, db)
-            elif choice == "8":
-                market_analysis(agent)
-            elif choice == "9":
-                dashboard(db)
+            menu_items[int(choice) - 1][1]()
 
         except KeyboardInterrupt:
             console.print("\n[bold]Goodbye![/bold]")
