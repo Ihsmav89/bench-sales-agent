@@ -30,7 +30,9 @@
       "Bash(gh api:*)",
       "Bash(pytest:*)",
       "Bash(bench-agent-web)",
-      "mcp__sequential-thinking__sequentialthinking"
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(uvicorn:*)",
+      "Bash(kill:*)"
     ]
   }
 }
