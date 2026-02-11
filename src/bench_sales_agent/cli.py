@@ -168,7 +168,11 @@ def consultant_menu(db: Database, agent: BenchSalesAgent):
             if c:
                 with console.status("AI analyzing profile..."):
                     analysis = agent.analyze_consultant(c)
-                console.print(Panel(Markdown(analysis), title="Profile Analysis", border_style="green"))
+                console.print(Panel(
+                    Markdown(analysis),
+                    title="Profile Analysis",
+                    border_style="green",
+                ))
             else:
                 console.print("[red]Consultant not found.[/red]")
 

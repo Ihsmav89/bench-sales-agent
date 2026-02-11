@@ -26,7 +26,13 @@ class Database:
     def __init__(self, db_path: Optional[str] = None):
         if db_path is None:
             db_path = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
+                os.path.dirname(
+                    os.path.dirname(
+                        os.path.dirname(
+                            os.path.dirname(__file__)
+                        )
+                    )
+                ),
                 "data",
                 "bench_sales.json",
             )
@@ -47,27 +53,27 @@ class Database:
         return consultant.id
 
     def get_consultant(self, consultant_id: str) -> Optional[ConsultantProfile]:
-        Q = Query()
-        result = self._consultants.search(Q.id == consultant_id)
+        q = Query()
+        result = self._consultants.search(q.id == consultant_id)
         return ConsultantProfile(**result[0]) if result else None
 
     def list_consultants(self, on_bench_only: bool = False) -> list[ConsultantProfile]:
         if on_bench_only:
-            Q = Query()
-            results = self._consultants.search(Q.bench_since.exists())
+            q = Query()
+            results = self._consultants.search(q.bench_since.exists())
         else:
             results = self._consultants.all()
         return [ConsultantProfile(**r) for r in results]
 
     def update_consultant(self, consultant_id: str, **updates) -> bool:
-        Q = Query()
+        q = Query()
         updates["updated_at"] = datetime.now().isoformat()
-        updated = self._consultants.update(updates, Q.id == consultant_id)
+        updated = self._consultants.update(updates, q.id == consultant_id)
         return len(updated) > 0
 
     def delete_consultant(self, consultant_id: str) -> bool:
-        Q = Query()
-        removed = self._consultants.remove(Q.id == consultant_id)
+        q = Query()
+        removed = self._consultants.remove(q.id == consultant_id)
         return len(removed) > 0
 
     # ── Jobs ─────────────────────────────────────────────────────────────
@@ -80,23 +86,23 @@ class Database:
         return job.id
 
     def get_job(self, job_id: str) -> Optional[JobRequirement]:
-        Q = Query()
-        result = self._jobs.search(Q.id == job_id)
+        q = Query()
+        result = self._jobs.search(q.id == job_id)
         return JobRequirement(**result[0]) if result else None
 
     def list_jobs(self, active_only: bool = True) -> list[JobRequirement]:
         if active_only:
-            Q = Query()
-            results = self._jobs.search(Q.is_active == True)  # noqa: E712
+            q = Query()
+            results = self._jobs.search(q.is_active == True)  # noqa: E712
         else:
             results = self._jobs.all()
         return [JobRequirement(**r) for r in results]
 
     def search_jobs(self, skills: list[str]) -> list[JobRequirement]:
         """Search jobs matching any of the given skills."""
-        Q = Query()
+        q = Query()
         results = self._jobs.search(
-            Q.required_skills.test(
+            q.required_skills.test(
                 lambda req_skills: any(
                     s.lower() in [rs.lower() for rs in req_skills]
                     for s in skills
@@ -106,9 +112,9 @@ class Database:
         return [JobRequirement(**r) for r in results]
 
     def update_job(self, job_id: str, **updates) -> bool:
-        Q = Query()
+        q = Query()
         updates["updated_at"] = datetime.now().isoformat()
-        updated = self._jobs.update(updates, Q.id == job_id)
+        updated = self._jobs.update(updates, q.id == job_id)
         return len(updated) > 0
 
     # ── Vendors ──────────────────────────────────────────────────────────
@@ -121,29 +127,29 @@ class Database:
         return vendor.id
 
     def get_vendor(self, vendor_id: str) -> Optional[Vendor]:
-        Q = Query()
-        result = self._vendors.search(Q.id == vendor_id)
+        q = Query()
+        result = self._vendors.search(q.id == vendor_id)
         return Vendor(**result[0]) if result else None
 
     def list_vendors(self, active_only: bool = False) -> list[Vendor]:
         if active_only:
-            Q = Query()
-            results = self._vendors.search(Q.relationship == "Active")
+            q = Query()
+            results = self._vendors.search(q.relationship == "Active")
         else:
             results = self._vendors.all()
         return [Vendor(**r) for r in results]
 
     def find_vendor_by_name(self, name: str) -> Optional[Vendor]:
-        Q = Query()
+        q = Query()
         results = self._vendors.search(
-            Q.company_name.test(lambda n: name.lower() in n.lower())
+            q.company_name.test(lambda n: name.lower() in n.lower())
         )
         return Vendor(**results[0]) if results else None
 
     def update_vendor(self, vendor_id: str, **updates) -> bool:
-        Q = Query()
+        q = Query()
         updates["updated_at"] = datetime.now().isoformat()
-        updated = self._vendors.update(updates, Q.id == vendor_id)
+        updated = self._vendors.update(updates, q.id == vendor_id)
         return len(updated) > 0
 
     # ── Submissions ──────────────────────────────────────────────────────
@@ -156,27 +162,29 @@ class Database:
         return submission.id
 
     def get_submissions_for_consultant(self, consultant_id: str) -> list[Submission]:
-        Q = Query()
-        results = self._submissions.search(Q.consultant_id == consultant_id)
+        q = Query()
+        results = self._submissions.search(q.consultant_id == consultant_id)
         return [Submission(**r) for r in results]
 
     def get_submissions_for_job(self, job_id: str) -> list[Submission]:
-        Q = Query()
-        results = self._submissions.search(Q.job_id == job_id)
+        q = Query()
+        results = self._submissions.search(q.job_id == job_id)
         return [Submission(**r) for r in results]
 
     def list_pending_followups(self) -> list[Submission]:
         """Get submissions that need follow-up."""
-        Q = Query()
+        q = Query()
         results = self._submissions.search(
-            (Q.status == "Submitted") | (Q.status == "Vendor Screen") | (Q.status == "Client Review")
+            (q.status == "Submitted")
+            | (q.status == "Vendor Screen")
+            | (q.status == "Client Review")
         )
         return [Submission(**r) for r in results]
 
     def update_submission(self, submission_id: str, **updates) -> bool:
-        Q = Query()
+        q = Query()
         updates["updated_at"] = datetime.now().isoformat()
-        updated = self._submissions.update(updates, Q.id == submission_id)
+        updated = self._submissions.update(updates, q.id == submission_id)
         return len(updated) > 0
 
     # ── Stats ────────────────────────────────────────────────────────────

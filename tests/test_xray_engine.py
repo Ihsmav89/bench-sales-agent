@@ -81,7 +81,11 @@ def test_queries_are_c2c_only_no_w2():
     for q in queries + hotlist:
         assert '"w2"' not in q.query.lower(), f"W2 found in query: {q.query}"
         # Ensure C2C terms are present in job search queries
-    c2c_queries = [q for q in queries if "c2c" in q.query.lower() or "corp to corp" in q.query.lower()]
+    c2c_queries = [
+        q for q in queries
+        if "c2c" in q.query.lower()
+        or "corp to corp" in q.query.lower()
+    ]
     assert len(c2c_queries) >= 5
 
 

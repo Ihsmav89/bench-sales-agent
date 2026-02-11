@@ -25,7 +25,20 @@ class EmailTemplates:
     ) -> dict[str, str]:
         """Generate a consultant submission email."""
         skills_match = ", ".join(consultant.primary_skills[:5])
-        emp_types = "/".join(et.value for et in consultant.employment_types_accepted)
+        emp_types = "/".join(
+            et.value for et in consultant.employment_types_accepted
+        )
+        job_id_part = (
+            f" (Job ID: {job.job_id_external})"
+            if job.job_id_external else ""
+        )
+        total_exp = f"{consultant.total_experience_years:.0f}"
+        us_exp = f"{consultant.us_experience_years:.0f}"
+        avail = (
+            "Immediately"
+            if consultant.notice_period_days == 0
+            else f"{consultant.notice_period_days} days notice"
+        )
 
         subject = (
             f"Submission: {consultant.job_title} | "
@@ -37,13 +50,14 @@ class EmailTemplates:
 
         body = f"""Hi,
 
-Please find below the profile of our consultant for the {job.title} requirement{f' (Job ID: {job.job_id_external})' if job.job_id_external else ''}.
+Please find below the profile of our consultant \
+for the {job.title} requirement{job_id_part}.
 
 Candidate Summary:
 ------------------
 Name: {consultant.full_name}
 Job Title: {consultant.job_title}
-Experience: {consultant.total_experience_years:.0f}+ years (US: {consultant.us_experience_years:.0f}+ years)
+Experience: {total_exp}+ years (US: {us_exp}+ years)
 Key Skills: {skills_match}
 Visa Status: {consultant.visa_status.value}
 Current Location: {consultant.current_location}
@@ -51,7 +65,7 @@ Relocation: {"Open to relocation" if consultant.relocation else "Local/Remote pr
 Work Mode: {consultant.remote_preference}
 Employment Type: {emp_types}
 Rate: {consultant.rate_display()}
-Availability: {"Immediately" if consultant.notice_period_days == 0 else f"{consultant.notice_period_days} days notice"}
+Availability: {avail}
 
 {f"Note: {custom_note}" if custom_note else ""}
 
@@ -84,7 +98,8 @@ Best regards"""
 
 Hope you are doing well!
 
-We have the following consultants available for immediate placement. Please review and let us know if you have any matching requirements.
+We have the following consultants available for immediate placement.
+Please review and let us know if you have any matching requirements.
 
 Available Consultants ({today}):
 {"=" * 50}
@@ -95,7 +110,8 @@ Available Consultants ({today}):
 
 All consultants have updated resumes available upon request. We work on both C2C and W2 basis.
 
-If you have any requirements matching the above profiles, please share the job description and we can submit right away.
+If you have any requirements matching the above profiles,
+please share the job description and we can submit right away.
 
 Best regards"""
 
@@ -114,11 +130,20 @@ Best regards"""
             delta = datetime.now() - submission.submitted_at
             days_since = f"{delta.days} days ago" if delta.days > 0 else "today"
 
-        subject = f"Follow-up: {consultant.job_title} submission for {job.title}"
+        job_id_part = (
+            f" (Job ID: {job.job_id_external})"
+            if job.job_id_external else ""
+        )
+
+        subject = (
+            f"Follow-up: {consultant.job_title} "
+            f"submission for {job.title}"
+        )
 
         body = f"""Hi,
 
-I wanted to follow up on the profile I submitted {days_since} for the {job.title} position{f' (Job ID: {job.job_id_external})' if job.job_id_external else ''}.
+I wanted to follow up on the profile I submitted \
+{days_since} for the {job.title} position{job_id_part}.
 
 Quick recap:
 - Candidate: {consultant.job_title} with {consultant.total_experience_years:.0f}+ years experience
@@ -126,7 +151,8 @@ Quick recap:
 - Visa: {consultant.visa_status.value}
 - Availability: Immediate
 
-The consultant is still available and very interested in this opportunity. Could you please provide an update on the submission status?
+The consultant is still available and very interested in this opportunity.
+Could you please provide an update on the submission status?
 
 Happy to schedule a call or provide any additional information needed.
 
@@ -154,9 +180,13 @@ Our consultants are:
 - Available on C2C, W2, and Contract-to-Hire basis
 - Experienced with major VMS platforms (Fieldglass, Beeline)
 
-We have successfully placed consultants with Fortune 500 companies and government agencies. We maintain high standards for our consultants and ensure smooth onboarding.
+We have successfully placed consultants with Fortune 500 companies
+and government agencies. We maintain high standards for our
+consultants and ensure smooth onboarding.
 
-If you have any open requirements matching our expertise, please feel free to share. We would be happy to submit qualified profiles promptly.
+If you have any open requirements matching our expertise,
+please feel free to share.
+We would be happy to submit qualified profiles promptly.
 
 Looking forward to a mutually beneficial partnership.
 

@@ -63,26 +63,127 @@ class XRaySearchEngine:
 
     # Common IT role synonyms for broader matching
     ROLE_SYNONYMS = {
-        "java developer": ["java developer", "java engineer", "java programmer", "j2ee developer"],
-        "python developer": ["python developer", "python engineer", "django developer", "flask developer"],
-        "data engineer": ["data engineer", "etl developer", "data pipeline engineer", "big data engineer"],
-        "devops engineer": ["devops engineer", "site reliability engineer", "sre", "platform engineer", "cloud engineer"],
-        "full stack developer": ["full stack developer", "fullstack developer", "full-stack developer", "mern developer", "mean developer"],
-        "qa engineer": ["qa engineer", "qa analyst", "test engineer", "sdet", "quality assurance"],
-        "business analyst": ["business analyst", "ba", "business systems analyst", "requirements analyst"],
-        "data analyst": ["data analyst", "reporting analyst", "bi analyst", "analytics engineer"],
-        "salesforce developer": ["salesforce developer", "sfdc developer", "salesforce engineer", "salesforce admin"],
-        "aws engineer": ["aws engineer", "aws architect", "aws devops", "cloud engineer aws"],
-        "azure engineer": ["azure engineer", "azure architect", "azure devops", "cloud engineer azure"],
-        ".net developer": [".net developer", "dotnet developer", "c# developer", "asp.net developer"],
-        "react developer": ["react developer", "react engineer", "reactjs developer", "frontend developer react"],
-        "scrum master": ["scrum master", "agile coach", "agile scrum master"],
-        "project manager": ["project manager", "program manager", "it project manager", "technical project manager"],
-        "data scientist": ["data scientist", "ml engineer", "machine learning engineer", "ai engineer"],
-        "sap consultant": ["sap consultant", "sap developer", "sap functional", "sap basis"],
-        "network engineer": ["network engineer", "network administrator", "cisco engineer"],
-        "security engineer": ["security engineer", "cybersecurity engineer", "information security", "infosec engineer"],
-        "database administrator": ["database administrator", "dba", "database engineer", "sql dba"],
+        "java developer": [
+            "java developer",
+            "java engineer",
+            "java programmer",
+            "j2ee developer",
+        ],
+        "python developer": [
+            "python developer",
+            "python engineer",
+            "django developer",
+            "flask developer",
+        ],
+        "data engineer": [
+            "data engineer",
+            "etl developer",
+            "data pipeline engineer",
+            "big data engineer",
+        ],
+        "devops engineer": [
+            "devops engineer",
+            "site reliability engineer",
+            "sre",
+            "platform engineer",
+            "cloud engineer",
+        ],
+        "full stack developer": [
+            "full stack developer",
+            "fullstack developer",
+            "full-stack developer",
+            "mern developer",
+            "mean developer",
+        ],
+        "qa engineer": [
+            "qa engineer",
+            "qa analyst",
+            "test engineer",
+            "sdet",
+            "quality assurance",
+        ],
+        "business analyst": [
+            "business analyst",
+            "ba",
+            "business systems analyst",
+            "requirements analyst",
+        ],
+        "data analyst": [
+            "data analyst",
+            "reporting analyst",
+            "bi analyst",
+            "analytics engineer",
+        ],
+        "salesforce developer": [
+            "salesforce developer",
+            "sfdc developer",
+            "salesforce engineer",
+            "salesforce admin",
+        ],
+        "aws engineer": [
+            "aws engineer",
+            "aws architect",
+            "aws devops",
+            "cloud engineer aws",
+        ],
+        "azure engineer": [
+            "azure engineer",
+            "azure architect",
+            "azure devops",
+            "cloud engineer azure",
+        ],
+        ".net developer": [
+            ".net developer",
+            "dotnet developer",
+            "c# developer",
+            "asp.net developer",
+        ],
+        "react developer": [
+            "react developer",
+            "react engineer",
+            "reactjs developer",
+            "frontend developer react",
+        ],
+        "scrum master": [
+            "scrum master",
+            "agile coach",
+            "agile scrum master",
+        ],
+        "project manager": [
+            "project manager",
+            "program manager",
+            "it project manager",
+            "technical project manager",
+        ],
+        "data scientist": [
+            "data scientist",
+            "ml engineer",
+            "machine learning engineer",
+            "ai engineer",
+        ],
+        "sap consultant": [
+            "sap consultant",
+            "sap developer",
+            "sap functional",
+            "sap basis",
+        ],
+        "network engineer": [
+            "network engineer",
+            "network administrator",
+            "cisco engineer",
+        ],
+        "security engineer": [
+            "security engineer",
+            "cybersecurity engineer",
+            "information security",
+            "infosec engineer",
+        ],
+        "database administrator": [
+            "database administrator",
+            "dba",
+            "database engineer",
+            "sql dba",
+        ],
     }
 
     # Contract/C2C specific terms that indicate staffing requirements
@@ -131,7 +232,10 @@ class XRaySearchEngine:
         q = f'site:linkedin.com/jobs "{title}" ({skills_str})'
         if loc:
             q += f' "{loc}"'
-        q += ' ("c2c" OR "corp to corp" OR "corp-to-corp" OR "contract")'
+        q += (
+            ' ("c2c" OR "corp to corp"'
+            ' OR "corp-to-corp" OR "contract")'
+        )
         queries.append(SearchQuery(
             query=q,
             platform=SearchPlatform.LINKEDIN,
@@ -142,7 +246,11 @@ class XRaySearchEngine:
         ))
 
         # 2. Find recruiters/vendors posting these roles on LinkedIn
-        q2 = f'site:linkedin.com/in ("bench sales" OR "us staffing" OR "it recruiter") ({skills_str})'
+        q2 = (
+            f'site:linkedin.com/in '
+            f'("bench sales" OR "us staffing"'
+            f' OR "it recruiter") ({skills_str})'
+        )
         if loc:
             q2 += f' "{loc}"'
         queries.append(SearchQuery(
@@ -170,8 +278,11 @@ class XRaySearchEngine:
 
         # 4. LinkedIn posts mentioning urgent/hot requirements
         q4 = (
-            f'site:linkedin.com/posts ("urgent requirement" OR "hot requirement" OR '
-            f'"immediate need" OR "looking for") "{title}" ("c2c" OR "corp to corp" OR "corp-to-corp" OR "contract")'
+            f'site:linkedin.com/posts '
+            f'("urgent requirement" OR "hot requirement"'
+            f' OR "immediate need" OR "looking for") '
+            f'"{title}" ("c2c" OR "corp to corp"'
+            f' OR "corp-to-corp" OR "contract")'
         )
         if loc:
             q4 += f' "{loc}"'
@@ -228,7 +339,11 @@ class XRaySearchEngine:
         title = p.job_title
         skills_str = " OR ".join(f'"{s}"' for s in p.primary_skills[:3])
 
-        q = f'site:indeed.com/viewjob "{title}" ({skills_str}) ("c2c" OR "corp to corp" OR "contract")'
+        q = (
+            f'site:indeed.com/viewjob "{title}" '
+            f'({skills_str}) '
+            f'("c2c" OR "corp to corp" OR "contract")'
+        )
         if p.location:
             q += f' "{p.location}"'
         queries.append(SearchQuery(

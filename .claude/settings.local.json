@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m pip install:*)",
+      "Bash(python3:*)",
+      "Bash(source:*)",
+      "Bash(pip install:*)",
+      "Bash(ruff check:*)",
+      "Bash(bench-agent:*)",
+      "WebSearch",
+      "WebFetch(domain:www.dice.com)",
+      "WebFetch(domain:corptocorp.org)",
+      "WebFetch(domain:usstaffinginc.org)",
+      "Bash(chmod:*)",
+      "Bash(curl:*)",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "Bash(pkill:*)",
+      "mcp__plugin_playwright_playwright__browser_click",
+      "mcp__plugin_playwright_playwright__browser_fill_form",
+      "mcp__plugin_playwright_playwright__browser_select_option",
+      "mcp__plugin_playwright_playwright__browser_snapshot",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nBench Sales Agent — full project with Web UI deployment\n\nAI-powered bench sales recruiter with 15-year expertise for finding\nC2C contract roles across US job boards. Includes X-ray search engine\n\\(21+ Google dork queries per consultant\\), TinyDB persistence, email\ntemplates, and Claude-powered AI chat/analysis.\n\n- CLI interface \\(bench-agent\\) with Rich-powered 9-option interactive menu\n- Web UI \\(bench-agent-web\\) with FastAPI + HTMX + Tailwind dark theme\n- 9 route modules: dashboard, consultants, search, jobs, vendors,\n  submissions, emails, AI chat, market rates\n- X-ray search across LinkedIn, Dice, Indeed, Monster, ZipRecruiter,\n  CareerBuilder, Glassdoor, TechFetch, C2C boards, VMS/MSP\n- C2C-only search \\(no W2 queries\\) with 18 passing tests\n- Distribution: Docker, PyInstaller, macOS/Windows install scripts\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(gh auth status:*)",
+      "Bash(gh repo create:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(gh api:*)"
+    ]
+  }
+}

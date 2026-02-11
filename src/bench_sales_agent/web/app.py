@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import os
-import sys
 import webbrowser
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -30,7 +29,17 @@ def create_app() -> FastAPI:
     app = FastAPI(title="Bench Sales Agent", lifespan=lifespan)
     app.state.templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
-    from .routes import chat, consultants, dashboard, emails, jobs, market, search, submissions, vendors
+    from .routes import (
+        chat,
+        consultants,
+        dashboard,
+        emails,
+        jobs,
+        market,
+        search,
+        submissions,
+        vendors,
+    )
 
     app.include_router(dashboard.router)
     app.include_router(consultants.router, prefix="/consultants", tags=["consultants"])

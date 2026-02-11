@@ -1,7 +1,6 @@
 """AI chat route."""
 
 from fastapi import APIRouter, Form, Request
-from fastapi.responses import HTMLResponse
 
 from ..app import get_agent, get_db, get_templates
 
