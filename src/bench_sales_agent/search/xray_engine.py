@@ -305,7 +305,7 @@ class XRaySearchEngine:
         skills_str = " OR ".join(f'"{s}"' for s in p.primary_skills[:4])
 
         # Dice direct X-ray
-        q = f'site:dice.com/job-detail "{title}" ({skills_str})'
+        q = f'site:dice.com "{title}" ({skills_str})'
         if p.location:
             q += f' "{p.location}"'
         q += ' ("contract" OR "c2c")'
@@ -340,7 +340,7 @@ class XRaySearchEngine:
         skills_str = " OR ".join(f'"{s}"' for s in p.primary_skills[:3])
 
         q = (
-            f'site:indeed.com/viewjob "{title}" '
+            f'site:indeed.com "{title}" '
             f'({skills_str}) '
             f'("c2c" OR "corp to corp" OR "contract")'
         )
@@ -363,7 +363,9 @@ class XRaySearchEngine:
         queries = []
         title = p.job_title
 
-        q = f'site:monster.com "{title}" ("contract" OR "temporary") "{p.location}"'
+        q = f'site:monster.com "{title}" ("contract" OR "temporary")'
+        if p.location:
+            q += f' "{p.location}"'
         queries.append(SearchQuery(
             query=q,
             platform=SearchPlatform.MONSTER,
@@ -381,7 +383,9 @@ class XRaySearchEngine:
         queries = []
         title = p.job_title
 
-        q = f'site:careerbuilder.com "{title}" ("contract" OR "c2c") "{p.location}"'
+        q = f'site:careerbuilder.com "{title}" ("contract" OR "c2c")'
+        if p.location:
+            q += f' "{p.location}"'
         queries.append(SearchQuery(
             query=q,
             platform=SearchPlatform.CAREERBUILDER,
@@ -461,7 +465,7 @@ class XRaySearchEngine:
 
         # Find staffing companies specializing in these skills
         q2 = (
-            f'"staffing" ("consulting") ({skills_str}) '
+            f'("staffing" OR "consulting") ({skills_str}) '
             f'("c2c" OR "corp to corp" OR "contract staffing") "united states"'
         )
         queries.append(SearchQuery(
@@ -541,8 +545,11 @@ class XRaySearchEngine:
             priority=1,
         ))
 
-        # Search specifically on C2C job boards
-        q2 = f'(site:c2crequirements.com OR site:c2cjobs.com) "{title}" ({skills_str})'
+        # Search specifically on C2C job boards and staffing portals
+        q2 = (
+            f'(site:c2ckloud.com OR site:jobdiva.com OR site:ceipal.com) '
+            f'"{title}" ({skills_str})'
+        )
         queries.append(SearchQuery(
             query=q2,
             platform=SearchPlatform.CORP_CORP,
@@ -578,24 +585,43 @@ class XRaySearchEngine:
 
         return queries
 
-    # ── Email / Contact Harvesting ───────────────────────────────────────
+    # ── Contact / Recruiter Finding ──────────────────────────────────────
 
     def _email_harvest_queries(self, p: ConsultantSearchParams) -> list[SearchQuery]:
-        """Find recruiter/vendor email addresses for direct outreach."""
+        """Find recruiter contacts and vendor outreach channels."""
         queries = []
         title = p.job_title
 
+        # Find vendor requirement postings with contact info
         q = (
-            f'("{title}" OR "bench sales") ("send resume to" OR "email your resume" '
-            f'OR "submit resume") "@" ("gmail.com" OR "yahoo.com" OR ".com")'
+            f'("{title}" OR "bench sales") '
+            f'("send resume" OR "share profiles" OR "submit resume") '
+            f'("c2c" OR "corp to corp") ("requirement" OR "opening")'
         )
+        if p.location:
+            q += f' "{p.location}"'
         queries.append(SearchQuery(
             query=q,
             platform=SearchPlatform.GOOGLE,
             search_url=self._google_base + self._url_encode(q),
-            description=f"Find recruiter emails for {title} submissions",
+            description=f"Find vendor contacts posting {title} requirements",
             category="contact_find",
             priority=2,
+        ))
+
+        # Find recruiter profiles on staffing directories
+        q2 = (
+            f'(site:staffingindustry.com OR site:clearlyrated.com '
+            f'OR "staffing agency") '
+            f'("{title}" OR "it staffing") ("c2c" OR "contract")'
+        )
+        queries.append(SearchQuery(
+            query=q2,
+            platform=SearchPlatform.GOOGLE,
+            search_url=self._google_base + self._url_encode(q2),
+            description=f"Staffing directories: agencies placing {title}",
+            category="contact_find",
+            priority=3,
         ))
 
         return queries
@@ -622,18 +648,20 @@ class XRaySearchEngine:
             priority=1,
         ))
 
-        # Find Google Groups / Yahoo Groups with requirements
+        # Find requirements on staffing portals and ATS platforms
         q2 = (
-            f'(site:groups.google.com OR "google groups" OR "yahoo groups") '
-            f'"requirement" ({skills_str} OR "{title}") ("c2c" OR "contract")'
+            f'(site:simplyhired.com OR site:builtin.com OR site:wellfound.com) '
+            f'"{title}" ({skills_str}) ("contract" OR "c2c")'
         )
+        if p.location:
+            q2 += f' "{p.location}"'
         queries.append(SearchQuery(
             query=q2,
             platform=SearchPlatform.GOOGLE,
             search_url=self._google_base + self._url_encode(q2),
-            description=f"Mailing list requirements for {title}",
+            description=f"Additional boards: {title} contract roles",
             category="job_search",
-            priority=3,
+            priority=2,
         ))
 
         return queries

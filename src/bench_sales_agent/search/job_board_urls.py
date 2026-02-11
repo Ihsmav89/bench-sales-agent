@@ -85,18 +85,38 @@ class JobBoardURLBuilder:
     @staticmethod
     def glassdoor(title: str, location: str = "") -> JobBoardLink:
         params = {
-            "sc.keyword": f"{title} c2c corp to corp",
+            "keyword": f"{title} c2c corp to corp",
             "locT": "N",
             "locKeyword": location or "United States",
+            "jobType": "contract",
         }
         url = "https://www.glassdoor.com/Job/jobs.htm?" + urllib.parse.urlencode(params)
         return JobBoardLink("Glassdoor", url, f"Glassdoor: {title} C2C")
 
     @staticmethod
     def techfetch(title: str) -> JobBoardLink:
-        params = {"q": title, "jtype": "C2C,Contract"}
+        params = {"q": f"{title} c2c", "jtype": "Contract"}
         url = "https://www.techfetch.com/job/search?" + urllib.parse.urlencode(params)
         return JobBoardLink("TechFetch", url, f"TechFetch: {title} C2C/contract")
+
+    @staticmethod
+    def simplyhired(title: str, location: str = "") -> JobBoardLink:
+        params = {
+            "q": f"{title} c2c corp to corp",
+            "l": location or "United States",
+            "jt": "contract",
+        }
+        url = "https://www.simplyhired.com/search?" + urllib.parse.urlencode(params)
+        return JobBoardLink("SimplyHired", url, f"SimplyHired: {title} C2C")
+
+    @staticmethod
+    def builtin(title: str, location: str = "") -> JobBoardLink:
+        params = {
+            "search": f"{title} contract",
+            "location": location,
+        }
+        url = "https://builtin.com/jobs?" + urllib.parse.urlencode(params)
+        return JobBoardLink("Built In", url, f"Built In: {title} contract roles")
 
     @classmethod
     def all_boards(cls, title: str, location: str = "") -> list[JobBoardLink]:
@@ -110,4 +130,6 @@ class JobBoardURLBuilder:
             cls.careerbuilder(title, location),
             cls.glassdoor(title, location),
             cls.techfetch(title),
+            cls.simplyhired(title, location),
+            cls.builtin(title, location),
         ]
